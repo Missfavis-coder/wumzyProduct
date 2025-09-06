@@ -2,17 +2,51 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const navLinks = [
-  { href: "/", label: "Products" },
-  { href: "/", label: "About" },
+  { href: "/products", label: "Products" },
+  { href: "/about", label: "About" },
   { href: "/privacy", label: "Contact" },
 ];
 
 export default function Header() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolledToFeatures, setScrolledToFeatures] = useState(false);
+  const [scrolledToFooter, setScrolledToFooter] = useState(false);
+
+
+  useEffect(() => {
+    const featuresSection = document.querySelector("#features");
+    const footerSection = document.querySelector("#footer");
+    if (!featuresSection ) return;
+    if (!footerSection ) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setScrolledToFeatures(true);
+            setScrolledToFooter(true)
+          } else {
+            setScrolledToFeatures(false);
+            setScrolledToFooter(!scrolledToFooter)
+          }
+        });
+      },
+      { threshold: 0.2 } // triggers when 20% of features section is visible
+    );
+
+    observer.observe(featuresSection);
+    observer.observe(footerSection);
+
+    return () => {
+      if (featuresSection) observer.unobserve(featuresSection);
+      if (footerSection) observer.unobserve(footerSection);
+    };
+  }, []);
+
 
   const isLinkActive = (href: string, activePaths?: string[]) => {
     if (activePaths) {
@@ -28,9 +62,9 @@ export default function Header() {
           key={index}
           href={link.href}
           className={`
-            text-sm font-medium transition-colors text-gray-700" ${isLinkActive(link.href)
-                ? "text-primary-600"
-                : "hover:text-primary-600"
+            text-sm font-medium transition-colors text-shadow-amber-400 " ${isLinkActive(link.href)
+                ? ""
+                : "hover:text-yellow-600"
               }
           `}
           onClick={() => isMobile && setIsMenuOpen(false)}
@@ -42,11 +76,15 @@ export default function Header() {
   );
 
   return (
-    <nav className=" w-full bg-white relative backdrop-blur-xl z-50">
-      <div className=" max-w-7xl mx-auto flex justify-between items-center h-10 px-4 py-12 lg:px-16">
-        <div className="flex text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-800 text-transparent bg-clip-text items-center gap-2">
+    <nav 
+    className={`w-full py-4 fixed top-0 left-0 z-50 transition-colors duration-500 `}
+    >
+      <div className={` max-w-7xl lg:mx-auto my-2 flex justify-between items-center h-10 rounded-full px-8 py-8 lg:px-16 backdrop-blur-2xl mx-5 ${
+      scrolledToFeatures ? "bg-yellow-600 text-neutral-800" : "bg-neutral-900 text-white"
+    }`}>
+        <div className="flex text-2xl font-bold text-white items-center gap-2">
           <Link href="/">
-            WunmzyWears.
+              AI Scheduler
           </Link>
         </div>
 
@@ -57,16 +95,16 @@ export default function Header() {
         <div className="hidden md:flex items-center">
           <Link
             href="/"
-            className="text-sm px-5 py-2.5 bg-primary-600  rounded-full transition-all hover:scale-105"
+            className="text-sm px-5 py-2.5 bg-yellow-600  rounded-full transition-all hover:scale-105"
           >
-            User Profile
+            Sign Up
           </Link>
         </div>
 
         <div className="md:hidden flex items-center">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-orange-700"
+            className="inline-flex items-center justify-center p-2 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-yellow-700"
             aria-expanded="false"
           >
             <span className="sr-only">Open main menu</span>
@@ -108,7 +146,7 @@ export default function Header() {
       </div>
       
       {isMenuOpen && (
-        <div className="md:hidden absolute  w-full h-[150px] py-2 bg-white" id="mobile-menu">
+        <div className="md:hidden absolute top-full left-p w-full h-[150px] py-4 bg-white" id="mobile-menu">
           <div className="px-2 pt-2 pb-3 space-y-6 sm:px-3 flex flex-col items-center">
             <NavLinkItems isMobile={true} />
           </div>
